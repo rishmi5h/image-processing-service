@@ -1,6 +1,7 @@
 package com.imageprocessing.controller;
 
-import com.imageprocessing.model.LoginInfo;
+import com.imageprocessing.model.AuthInfoRequest;
+import com.imageprocessing.model.AuthInfoResponse;
 import com.imageprocessing.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,14 +20,24 @@ public class ImageProcessingController {
     private final AuthenticationService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody LoginInfo request) {
+    public ResponseEntity<AuthInfoResponse> register(@RequestBody AuthInfoRequest request) {
         log.info("Register Info: {}", request.getUsername());
-        return ResponseEntity.ok(authService.register(request));
+        AuthInfoResponse response = new AuthInfoResponse();
+        response.setUsername(request.getUsername());
+        response.setPassword(request.getPassword());
+        response.setJwt(authService.register(request));
+        log.info("Register Response: {}", response.getUsername());
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/authenticate")
-    public ResponseEntity<String> authenticate(@RequestBody LoginInfo request) {
+    @PostMapping("/login")
+    public ResponseEntity<AuthInfoResponse> login(@RequestBody AuthInfoRequest request) {
         log.info("Login Info: {}", request.getUsername());
-        return ResponseEntity.ok(authService.authenticate(request));
+        AuthInfoResponse response = new AuthInfoResponse();
+        response.setUsername(request.getUsername());
+        response.setPassword(request.getPassword());
+        response.setJwt(authService.login(request));
+        log.info("Login Response: {}", response.getUsername());
+        return ResponseEntity.ok(response);
     }
 }
