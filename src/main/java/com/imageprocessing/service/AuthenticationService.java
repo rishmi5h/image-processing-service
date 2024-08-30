@@ -1,7 +1,7 @@
 package com.imageprocessing.service;
 
 import com.imageprocessing.entities.User;
-import com.imageprocessing.model.AuthInfoRequest;
+import com.imageprocessing.model.AuthInfo;
 import com.imageprocessing.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,7 +17,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public String register(AuthInfoRequest request) {
+    public String register(AuthInfo request) {
         var user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -27,7 +27,7 @@ public class AuthenticationService {
         return jwtToken;
     }
 
-    public String login(AuthInfoRequest request) {
+    public String login(AuthInfo request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
