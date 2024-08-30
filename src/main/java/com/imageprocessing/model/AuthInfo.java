@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class AuthInfoRequest {
+public class AuthInfo {
     public String username;
     public String password;
 }
