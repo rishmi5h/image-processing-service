@@ -1,7 +1,6 @@
 package com.imageprocessing.controller;
 
 import com.imageprocessing.model.AuthInfo;
-import com.imageprocessing.model.AuthInfoResponse;
 import com.imageprocessing.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,20 +20,26 @@ public class ImageProcessingController {
     private final AuthenticationService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthInfo> register(@RequestBody AuthInfo request) {
+    public ResponseEntity<String> register(@RequestBody AuthInfo request) {
         log.info("Register Info: {}", request.getUsername());
         String jwt = authService.register(request);
+        if (jwt.chars().filter(ch -> ch == '.').count() != 2) {
+            throw new IllegalArgumentException("Invalid JWT token");
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + jwt);
-        return ResponseEntity.ok().headers(headers).body(request);
+        return ResponseEntity.ok().headers(headers).body(jwt);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthInfo> login(@RequestBody AuthInfo request) {
+    public ResponseEntity<String> login(@RequestBody AuthInfo request) {
         log.info("Login Info: {}", request.getUsername());
         String jwt = authService.login(request);
+        if (jwt.chars().filter(ch -> ch == '.').count() != 2) {
+            throw new IllegalArgumentException("Invalid JWT token");
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + jwt);
-        return ResponseEntity.ok().headers(headers).body(request);
+        return ResponseEntity.ok().headers(headers).body(jwt);
     }
 }
