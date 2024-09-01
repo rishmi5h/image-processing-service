@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = "http://localhost:5173, https://imagery.rishmi5h.com")
 @RequiredArgsConstructor
 @Slf4j
-public class ImageProcessingController {
+public class AuthController {
 
     private final AuthenticationService authService;
 
