@@ -1,12 +1,14 @@
 package com.imageprocessing.controller;
 
+import com.imageprocessing.service.ImageProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -15,6 +17,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class ImageController {
+
+    private final ImageProcessingService imageProcessingService;
 
     @PostMapping("/")
     public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
