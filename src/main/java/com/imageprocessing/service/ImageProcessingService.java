@@ -1,8 +1,8 @@
 package com.imageprocessing.service;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.AmazonS3;
+import software.amazon.awssdk.services.s3.model.ObjectMetadata;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
