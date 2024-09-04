@@ -1,4 +1,4 @@
-package com.image.processing;
+package com.imageprocessing;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
