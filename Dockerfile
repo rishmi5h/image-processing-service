@@ -15,3 +15,6 @@ COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
 COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
 COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 ENTRYPOINT ["java","-cp","app:app/lib/*","com.imageprocessing.ImageProcessingApplication"]
+
+# Set the image name for Docker repository
+LABEL org.opencontainers.image.source=docker.io/library/imagery
