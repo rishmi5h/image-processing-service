@@ -27,6 +27,9 @@ public class ImageProcessingService {
     @Value("${aws.s3.bucket}")
     private String bucketName;
 
+    @Value("${aws.s3.region}")
+    private String bucketRegion;
+
     public Map<String, String> uploadImage(MultipartFile file) throws IOException {
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
 
@@ -39,7 +42,7 @@ public class ImageProcessingService {
 
         PutObjectResponse putObjectResponse = amazonS3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
-        String fileUrl = "https://" + bucketName + ".s3.amazonaws.com/" + fileName;
+        String fileUrl = "https://" + bucketName + ".s3." + bucketRegion + ".amazonaws.com/" + fileName;
 
         Map<String, String> response = new HashMap<>();
         response.put("fileName", fileName);
