@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Map;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173, https://imagery.rishmi5h.com")
@@ -19,9 +20,9 @@ public class ImageController {
     private final ImageProcessingService imageProcessingService;
 
     @PostMapping("/images")
-    public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file, Authentication authentication) {
         try {
-            Map<String, String> response = imageProcessingService.uploadImage(file);
+            Map<String, String> response = imageProcessingService.uploadImage(file, authentication);
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
