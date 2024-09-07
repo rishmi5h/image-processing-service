@@ -20,15 +20,19 @@ public class AuthController {
     private final AuthenticationService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody AuthInfo request) {
+    public ResponseEntity<?> register(@RequestBody AuthInfo request) {
         log.info("Register Info: {}", request.getUsername());
-        String jwt = authService.register(request);
-        if (jwt.chars().filter(ch -> ch == '.').count() != 2) {
-            throw new IllegalArgumentException("Invalid JWT token");
+        try {
+            String jwt = authService.register(request);
+            if (jwt.chars().filter(ch -> ch == '.').count() != 2) {
+                throw new IllegalArgumentException("Invalid JWT token");
+            }
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "Bearer " + jwt);
+            return ResponseEntity.ok().headers(headers).body(jwt);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + jwt);
-        return ResponseEntity.ok().headers(headers).body(jwt);
     }
 
     @PostMapping("/login")
