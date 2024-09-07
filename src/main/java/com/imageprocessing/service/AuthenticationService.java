@@ -18,13 +18,15 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     public String register(AuthInfo request) {
+        if (repository.findByUsername(request.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("Username already exists");
+        }
         var user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
         repository.save(user);
-        var jwtToken = jwtService.generateToken(user);
-        return jwtToken;
+        return jwtService.generateToken(user);
     }
 
     public String login(AuthInfo request) {
