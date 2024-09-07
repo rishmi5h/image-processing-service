@@ -44,6 +44,10 @@ public class ImageController {
         return "downloadImage";
     }
 
+    @DeleteMapping("/images/:id")
+    public String deleteImage(@PathVariable String id) {
+        return "deleteImage";
+    }
 
 
 }
