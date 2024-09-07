@@ -39,9 +39,13 @@ public class ImageProcessingService {
     private String bucketRegion;
 
     public Map<String, String> uploadImage(MultipartFile file, Authentication authentication) throws IOException {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("User is not authenticated");
+        }
+        
         Integer userId = (Integer) authentication.getCredentials();
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new SecurityException("User not found"));
 
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         String fileExtension = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1);
