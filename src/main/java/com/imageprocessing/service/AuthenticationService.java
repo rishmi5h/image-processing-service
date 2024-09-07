@@ -41,4 +41,15 @@ public class AuthenticationService {
         var jwtToken = jwtService.generateToken(user);
         return jwtToken;
     }
+
+    public boolean validateToken(String token) {
+        String username = jwtService.extractUsername(token);
+        if (username != null) {
+            User userDetails = repository.findByUsername(username).orElse(null);
+            if (userDetails != null) {
+                return jwtService.isTokenValid(token, userDetails);
+            }
+        }
+        return false;
+    }
 }
