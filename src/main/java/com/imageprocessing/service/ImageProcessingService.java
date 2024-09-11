@@ -15,6 +15,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -100,5 +101,30 @@ public class ImageProcessingService {
         imageData.put("userId", image.getUserId());
 
         return imageData;
+    }
+
+    public void deleteImage(String id, Authentication authentication) throws IOException {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new SecurityException("User is not authenticated");
+        }
+
+        Integer userId = (Integer) authentication.getCredentials();
+        Images image = imagesRepository.findById(Long.valueOf(id))
+                .orElseThrow(() -> new IllegalArgumentException("Image not found"));
+
+        if (!image.getUserId().equals(Long.valueOf(userId))) {
+            throw new SecurityException("User is not authorized to delete this image");
+        }
+
+        // Delete from S3
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(image.getFileName())
+                .build();
+
+        amazonS3Client.deleteObject(deleteObjectRequest);
+
+        // Delete from MySQL
+        imagesRepository.delete(image);
     }
 }
