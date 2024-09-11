@@ -5,7 +5,6 @@ import com.imageprocessing.entities.User;
 import com.imageprocessing.repository.ImagesRepository;
 import com.imageprocessing.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +24,6 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@AllArgsConstructor
 @Transactional
 @Slf4j
 public class ImageProcessingService {
