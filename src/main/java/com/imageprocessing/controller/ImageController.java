@@ -47,10 +47,17 @@ public class ImageController {
         }
     }
 
-    @DeleteMapping("/images/:id")
-    public String deleteImage(@PathVariable String id) {
-        return "deleteImage";
+    @DeleteMapping("/images/{id}")
+    public ResponseEntity<?> deleteImage(@PathVariable String id, Authentication authentication) {
+        try {
+            imageProcessingService.deleteImage(id, authentication);
+            return ResponseEntity.ok().body(Map.of("message", "Image deleted successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to delete image: " + e.getMessage()));
+        }
     }
-
-
 }
