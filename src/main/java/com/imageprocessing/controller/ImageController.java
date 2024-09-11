@@ -35,14 +35,16 @@ public class ImageController {
         return "transform";
     }
 
-    @GetMapping("/images/:id")
-    public String getImage(@PathVariable String id) {
-        return "getImage";
-    }
-
-    @GetMapping("/images")
-    public String downloadImage() {
-        return "downloadImage";
+    @GetMapping("/images/{id}")
+    public ResponseEntity<?> getImage(@PathVariable String id) {
+        try {
+            Map<String, Object> imageData = imageProcessingService.getImageData(id);
+            return ResponseEntity.ok(imageData);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to retrieve image data"));
+        }
     }
 
     @DeleteMapping("/images/:id")
