@@ -5,6 +5,7 @@ import com.imageprocessing.entities.User;
 import com.imageprocessing.repository.ImagesRepository;
 import com.imageprocessing.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +25,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@AllArgsConstructor
 @Transactional
 @Slf4j
 public class ImageProcessingService {
@@ -42,7 +44,7 @@ public class ImageProcessingService {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new SecurityException("User is not authenticated");
         }
-        
+
         Integer userId = (Integer) authentication.getCredentials();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new SecurityException("User not found"));
@@ -82,5 +84,23 @@ public class ImageProcessingService {
         response.put("size", String.valueOf(file.getSize()));
 
         return response;
+    }
+
+    public Map<String, Object> getImageData(String id) {
+        Images image = imagesRepository.findById(Long.valueOf(id))
+                .orElseThrow(() -> new IllegalArgumentException("Image not found"));
+
+        Map<String, Object> imageData = new HashMap<>();
+        imageData.put("id", image.getId());
+        imageData.put("s3Url", image.getS3Url());
+        imageData.put("fileName", image.getFileName());
+        imageData.put("fileType", image.getFileType());
+        imageData.put("fileSize", image.getFileSize());
+        imageData.put("fileExtension", image.getFileExtension());
+        imageData.put("createdAt", image.getCreatedAt());
+        imageData.put("updatedAt", image.getUpdatedAt());
+        imageData.put("userId", image.getUserId());
+
+        return imageData;
     }
 }
