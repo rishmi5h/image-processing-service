@@ -200,7 +200,7 @@ public class ImageProcessingService {
 
             Boolean sepia = (Boolean) filters.get("sepia");
             if (sepia != null && sepia) {
-                // Apply sepia filter logic here
+                applySepiaFilter(processor);
             }
         }
 
@@ -244,5 +244,26 @@ public class ImageProcessingService {
         response.put("userId", transformedImage.getUserId());
 
         return response;
+    }
+
+    private void applySepiaFilter(ImageProcessor processor) {
+        int width = processor.getWidth();
+        int height = processor.getHeight();
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int[] rgb = processor.getPixel(x, y, (int[]) null);
+
+                int tr = (int) (0.393 * rgb[0] + 0.769 * rgb[1] + 0.189 * rgb[2]);
+                int tg = (int) (0.349 * rgb[0] + 0.686 * rgb[1] + 0.168 * rgb[2]);
+                int tb = (int) (0.272 * rgb[0] + 0.534 * rgb[1] + 0.131 * rgb[2]);
+
+                rgb[0] = Math.min(255, tr);
+                rgb[1] = Math.min(255, tg);
+                rgb[2] = Math.min(255, tb);
+
+                processor.putPixel(x, y, rgb);
+            }
+        }
     }
 }
