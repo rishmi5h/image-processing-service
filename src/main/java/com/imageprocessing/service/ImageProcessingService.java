@@ -149,7 +149,14 @@ public class ImageProcessingService {
 
         // Download the image from S3
         File tempFile = File.createTempFile("image", "." + image.getFileExtension());
-        amazonS3Client.getObject(GetObjectRequest.builder().bucket(bucketName).key(image.getFileName()).build(), ResponseTransformer.toFile(tempFile));
+        try {
+            log.info("Attempting to download image from S3: bucket={}, key={}", bucketName, image.getFileName());
+            amazonS3Client.getObject(GetObjectRequest.builder().bucket(bucketName).key(image.getFileName()).build(), ResponseTransformer.toFile(tempFile));
+            log.info("Successfully downloaded image from S3 to {}", tempFile.getAbsolutePath());
+        } catch (Exception e) {
+            log.error("Failed to download image from S3", e);
+            throw new IOException("Failed to download image from S3", e);
+        }
 
         // Load the image using ImageJ
         ImagePlus img = IJ.openImage(tempFile.getAbsolutePath());
