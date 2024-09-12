@@ -30,9 +30,21 @@ public class ImageController {
         }
     }
 
-    @PostMapping("/images/:id/transform")
-    public String transform(@PathVariable String id) {
-        return "transform";
+    @PostMapping("/images/{id}/transform")
+    public ResponseEntity<?> transformImage(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> transformations,
+            Authentication authentication) {
+        try {
+            Map<String, Object> response = imageProcessingService.transformImage(id, transformations, authentication);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to transform image: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/images/{id}")
