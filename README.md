@@ -105,7 +105,7 @@ spring.datasource.password=your-password
 
 **Response**:
 
-- `200 OK`: Returns the image metadata.
+- `200 OK`: Returns the image metadata and the image S3 URL.
 
 ### Transform Image
 
@@ -149,7 +149,7 @@ spring.datasource.password=your-password
 
 **Response**:
 
-- `200 OK`: Returns the transformed image metadata.
+- `200 OK`: Returns the transformed image metadata and the image S3 URL.
 
 ### Get Image
 
