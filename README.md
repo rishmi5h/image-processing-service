@@ -47,9 +47,11 @@ spring.datasource.password=your-password
 **Request**: `multipart/form-data`
 
 **Parameters**:
+
 - `file`: The image file to upload.
 
 **Response**:
+
 - `200 OK`: Returns the image metadata.
 
 ### Transform Image
@@ -59,10 +61,37 @@ spring.datasource.password=your-password
 **Request**: `application/json`
 
 **Parameters**:
+
 - `id`: The ID of the image to transform.
 - `transformations`: A JSON object specifying the transformations to apply.
 
+#### Example JSON for Transformations
+
+```json
+{
+  "transformations": {
+    "resize": {
+      "width": 800,
+      "height": 600
+    },
+    "crop": {
+      "x": 100,
+      "y": 50,
+      "width": 400,
+      "height": 300
+    },
+    "rotate": 90,
+    "filters": {
+      "grayscale": true,
+      "sepia": true
+    },
+    "format": "png"
+  }
+}
+```
+
 **Response**:
+
 - `200 OK`: Returns the transformed image metadata.
 
 ### Delete Image
@@ -72,9 +101,11 @@ spring.datasource.password=your-password
 **Request**: `application/json`
 
 **Parameters**:
+
 - `id`: The ID of the image to delete.
 
 **Response**:
+
 - `200 OK`: Returns a success message.
 
 ## Running the Application
