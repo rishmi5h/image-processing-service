@@ -9,10 +9,13 @@ The Image Processing Service is a Spring Boot application that provides function
 - **Upload Image**: Upload images to AWS S3 and store metadata in a MySQL database.
 - **Transform Image**: Apply various transformations to images such as resize, crop, rotate, and filters.
 - **Delete Image**: Delete images from AWS S3 and remove metadata from the MySQL database.
+- **Authentication**: Authenticate users to access the API.
 
 ## Technologies Used
 
 - **Spring Boot**: For building the RESTful API.
+- **Spring Security**: For authentication.
+- **JWT**: For token-based authentication.
 - **AWS S3**: For storing images.
 - **MySQL**: For storing image metadata.
 - **ImageJ**: For image processing.
@@ -40,11 +43,61 @@ spring.datasource.password=your-password
 
 ## Endpoints
 
+### Login
+
+**Endpoint**: `POST /login`
+
+**Request**: `application/json`
+
+**Headers**:
+
+- `Content-Type`: application/json
+
+**Body**:
+
+```json
+{
+  "username": "your-username",
+  "password": "your-password"
+}
+```
+
+**Response**:
+
+- `200 OK`: Returns the JWT token.
+
+### Register
+
+**Endpoint**: `POST /register`
+
+**Request**: `application/json`
+
+**Headers**:
+
+- `Content-Type`: application/json
+
+**Body**:
+
+```json
+{
+  "username": "your-username",
+  "password": "your-password"
+}
+```
+
+**Response**:
+
+- `200 OK`: Returns a success message.
+
 ### Upload Image
 
 **Endpoint**: `POST /images`
 
 **Request**: `multipart/form-data`
+
+**Headers**:
+
+- `Authorization`: Bearer token
 
 **Parameters**:
 
@@ -59,6 +112,10 @@ spring.datasource.password=your-password
 **Endpoint**: `POST /images/{id}/transform`
 
 **Request**: `application/json`
+
+**Headers**:
+
+- `Authorization`: Bearer token
 
 **Parameters**:
 
@@ -94,11 +151,33 @@ spring.datasource.password=your-password
 
 - `200 OK`: Returns the transformed image metadata.
 
+### Get Image
+
+**Endpoint**: `GET /images/{id}`
+
+**Request**: `application/json`
+
+**Headers**:
+
+- `Authorization`: Bearer token
+
+**Parameters**:
+
+- `id`: The ID of the image to get.
+
+**Response**:
+
+- `200 OK`: Returns the image metadata and the image S3 URL.
+
 ### Delete Image
 
 **Endpoint**: `DELETE /images/{id}`
 
 **Request**: `application/json`
+
+**Headers**:
+
+- `Authorization`: Bearer token
 
 **Parameters**:
 
