@@ -10,6 +10,7 @@ The Image Processing Service is a Spring Boot application that provides function
 - **Transform Image**: Apply various transformations to images such as resize, crop, rotate, and filters.
 - **Delete Image**: Delete images from AWS S3 and remove metadata from the MySQL database.
 - **Authentication**: Authenticate users to access the API.
+- **Rate Limiting**: Limit the number of requests to prevent abuse.
 
 ## Technologies Used
 
@@ -21,6 +22,7 @@ The Image Processing Service is a Spring Boot application that provides function
 - **ImageJ**: For image processing.
 - **Lombok**: For reducing boilerplate code.
 - **Jakarta Transactions**: For managing transactions.
+- **Bucket4j**: For rate limiting.
 
 ## Prerequisites
 
@@ -186,6 +188,10 @@ spring.datasource.password=your-password
 **Response**:
 
 - `200 OK`: Returns a success message.
+
+## Rate Limiting
+
+Rate limiting is implemented using the `Bucket4j` library to prevent abuse and ensure fair usage of the API. Each IP address is limited to 10 requests per minute.
 
 ## Running the Application
 
