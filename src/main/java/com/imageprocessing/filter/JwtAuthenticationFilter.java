@@ -1,4 +1,4 @@
-package com.imageprocessing.config;
+package com.imageprocessing.filter;
 
 import com.imageprocessing.service.JwtService;
 import jakarta.servlet.FilterChain;
