@@ -1,1 +1,1 @@
-CREATE DATABASE IF NOT EXISTS image_processing;
+--CREATE DATABASE IF NOT EXISTS image_processing;
