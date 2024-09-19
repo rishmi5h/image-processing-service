@@ -31,7 +31,7 @@ public class SecurityConfig {
             .cors().configurationSource(corsConfigurationSource()).and()
             .csrf().disable()
             .authorizeHttpRequests()
-            .requestMatchers("/register", "/login", "/validate-token").permitAll()
+            .requestMatchers("/register", "/login", "/validate-token","/api-docs","/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
             .requestMatchers("/images/**").authenticated()
             .anyRequest().authenticated()
             .and()
