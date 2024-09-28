@@ -75,10 +75,9 @@ public class ImageController {
         }
     }
 
-
     @PostMapping("/convert")
     public ResponseEntity<?> convertImage(
-            @RequestParam("file") MultipartFile file,
+            @RequestBody MultipartFile file,
             @RequestParam("format") String format) {
         try {
             byte[] convertedImage = imageProcessingService.convertImage(file, format);
