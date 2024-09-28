@@ -21,6 +21,14 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.awt.Color;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import java.time.Duration;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +36,9 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.core.ResponseInputStream;
 
 @Service
 @RequiredArgsConstructor
@@ -265,5 +276,25 @@ public class ImageProcessingService {
                 processor.putPixel(x, y, rgb);
             }
         }
+    }
+
+    public byte[] convertImage(MultipartFile file, String format) throws IOException {
+        // Check if the file is an image
+        if (!file.getContentType().startsWith("image/")) {
+            throw new IllegalArgumentException("The uploaded file is not an image");
+        }
+
+        // Read the input image
+        BufferedImage inputImage = ImageIO.read(file.getInputStream());
+
+        // Convert the image
+        BufferedImage convertedImage = new BufferedImage(
+                inputImage.getWidth(), inputImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+        convertedImage.createGraphics().drawImage(inputImage, 0, 0, Color.WHITE, null);
+
+        // Save the converted image to a byte array
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(convertedImage, format, baos);
+        return baos.toByteArray();
     }
 }
