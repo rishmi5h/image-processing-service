@@ -10,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Map;
 import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173, https://imagery.rishmi5h.com")
@@ -17,7 +19,7 @@ import org.springframework.security.core.Authentication;
 @Slf4j
 public class ImageController {
 
-    private final ImageProcessingService imageProcessingService;
+     private final ImageProcessingService imageProcessingService;
 
     @PostMapping("/images")
     public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file, Authentication authentication) {
@@ -70,6 +72,24 @@ public class ImageController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to delete image: " + e.getMessage()));
+        }
+    }
+
+
+    @PostMapping("/convert")
+    public ResponseEntity<?> convertImage(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("format") String format) {
+        try {
+            byte[] convertedImage = imageProcessingService.convertImage(file, format);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("image/" + format));
+            headers.setContentDispositionFormData("attachment", "converted_image." + format);
+            return new ResponseEntity<>(convertedImage, headers, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to convert image: " + e.getMessage()));
         }
     }
 }
