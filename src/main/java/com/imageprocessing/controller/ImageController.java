@@ -12,6 +12,7 @@ import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173, https://imagery.rishmi5h.com")
@@ -75,7 +76,7 @@ public class ImageController {
 
     @DeleteMapping("/images/{id}")
     public ResponseEntity<?> deleteImage(@PathVariable String id, Authentication authentication) {
-        log.info("Received request to delete image ID: {} from user: {}", id, authentication.getName());
+        log.info("Starting image deletion process for id: {} by user: {}", id, authentication.getName());
         try {
             imageProcessingService.deleteImage(id, authentication);
             log.info("Successfully deleted image ID: {} for user: {}", id, authentication.getName());
@@ -107,9 +108,24 @@ public class ImageController {
         } catch (IllegalArgumentException e) {
             log.warn("Invalid image conversion request: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Failed to convert image to format: {}", format, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Failed to convert image: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        } catch (MaxUploadSizeExceededException e) {
+            log.error("File size exceeds maximum allowed upload size", e);
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                    .body(Map.of("error", "File size exceeds maximum allowed upload size"));
+        } catch (Exception e) {
+            log.error("Unexpected error during image conversion", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during image conversion"));
         }
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<?> handleMaxSizeException(MaxUploadSizeExceededException exc) {
+        log.error("File size exceeds maximum allowed upload size", exc);
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(Map.of("error", "File size exceeds maximum allowed upload size"));
     }
 }
