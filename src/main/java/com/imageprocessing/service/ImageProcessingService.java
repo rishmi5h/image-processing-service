@@ -57,16 +57,24 @@ public class ImageProcessingService {
     private String bucketRegion;
 
     public Map<String, String> uploadImage(MultipartFile file, Authentication authentication) throws IOException {
+        log.info("Starting image upload process for user: {}", authentication.getName());
         if (authentication == null || !authentication.isAuthenticated()) {
+            log.error("Unauthenticated user attempted to upload an image");
             throw new SecurityException("User is not authenticated");
         }
 
         Integer userId = (Integer) authentication.getCredentials();
+        log.debug("Fetching user details for userId: {}", userId);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new SecurityException("User not found"));
+                .orElseThrow(() -> {
+                    log.error("User not found for userId: {}", userId);
+                    return new SecurityException("User not found");
+                });
 
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         String fileExtension = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1);
+        log.info("Preparing to upload file: {}, with extension: {}", fileName, fileExtension);
+
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
@@ -74,11 +82,13 @@ public class ImageProcessingService {
                 .contentLength(file.getSize())
                 .build();
 
+        log.debug("Uploading file to S3: {}", fileName);
         PutObjectResponse putObjectResponse = amazonS3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
-        log.info("Uploaded file: {}", putObjectResponse);
+        log.info("File uploaded successfully: {}", putObjectResponse);
         String fileUrl = "https://" + bucketName + ".s3." + bucketRegion + ".amazonaws.com/" + fileName;
 
+        log.debug("Creating image record in database");
         Images uploadedImage = Images.builder()
                 .s3Url(fileUrl)
                 .fileName(fileName)
@@ -91,6 +101,7 @@ public class ImageProcessingService {
                 .build();
 
         imagesRepository.save(uploadedImage);
+        log.info("Image record created in database with id: {}", uploadedImage.getId());
 
         Map<String, String> response = new HashMap<>();
         response.put("imageId", uploadedImage.getId().toString());
@@ -99,13 +110,19 @@ public class ImageProcessingService {
         response.put("fileType", file.getContentType());
         response.put("size", String.valueOf(file.getSize()));
 
+        log.info("Image upload process completed successfully for user: {}", authentication.getName());
         return response;
     }
 
     public Map<String, Object> getImageData(String id) {
+        log.info("Fetching image data for id: {}", id);
         Images image = imagesRepository.findById(Long.valueOf(id))
-                .orElseThrow(() -> new IllegalArgumentException("Image not found"));
+                .orElseThrow(() -> {
+                    log.error("Image not found for id: {}", id);
+                    return new IllegalArgumentException("Image not found");
+                });
 
+        log.debug("Image found, preparing response");
         Map<String, Object> imageData = new HashMap<>();
         imageData.put("id", image.getId());
         imageData.put("s3Url", image.getS3Url());
@@ -117,32 +134,42 @@ public class ImageProcessingService {
         imageData.put("updatedAt", image.getUpdatedAt());
         imageData.put("userId", image.getUserId());
 
+        log.info("Image data fetched successfully for id: {}", id);
         return imageData;
     }
 
     public void deleteImage(String id, Authentication authentication) throws IOException {
+        log.info("Starting image deletion process for id: {} by user: {}", id, authentication.getName());
         if (authentication == null || !authentication.isAuthenticated()) {
+            log.error("Unauthenticated user attempted to delete an image");
             throw new SecurityException("User is not authenticated");
         }
 
         Integer userId = (Integer) authentication.getCredentials();
+        log.debug("Fetching image details for id: {}", id);
         Images image = imagesRepository.findById(Long.valueOf(id))
-                .orElseThrow(() -> new IllegalArgumentException("Image not found"));
+                .orElseThrow(() -> {
+                    log.error("Image not found for id: {}", id);
+                    return new IllegalArgumentException("Image not found");
+                });
 
         if (!image.getUserId().equals(Long.valueOf(userId))) {
+            log.error("User {} is not authorized to delete image {}", userId, id);
             throw new SecurityException("User is not authorized to delete this image");
         }
 
-        // Delete from S3
+        log.debug("Deleting image from S3: {}", image.getFileName());
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                 .bucket(bucketName)
                 .key(image.getFileName())
                 .build();
 
         amazonS3Client.deleteObject(deleteObjectRequest);
+        log.info("Image deleted from S3: {}", image.getFileName());
 
-        // Delete from MySQL
+        log.debug("Deleting image record from database");
         imagesRepository.delete(image);
+        log.info("Image deletion process completed successfully for id: {}", id);
     }
 
     public Map<String, Object> transformImage(String id, Map<String, Object> transformations, Authentication authentication) throws IOException {
@@ -279,13 +306,28 @@ public class ImageProcessingService {
     }
 
     public byte[] convertImage(MultipartFile file, String format) throws IOException {
-        // Check if the file is an image
-        if (!file.getContentType().startsWith("image/")) {
-            throw new IllegalArgumentException("The uploaded file is not an image");
+        log.info("Starting image conversion to format: {}", format);
+        
+        // Check if the file is an image and has a supported format
+        String contentType = file.getContentType();
+        if (contentType == null || !isSupportedImageFormat(contentType)) {
+            log.error("Unsupported image format. Content type: {}", contentType);
+            throw new IllegalArgumentException("Unsupported image format. Supported formats are JPEG, PNG, GIF, BMP, and WBMP.");
         }
 
         // Read the input image
-        BufferedImage inputImage = ImageIO.read(file.getInputStream());
+        BufferedImage inputImage = null;
+        try {
+            inputImage = ImageIO.read(file.getInputStream());
+        } catch (IOException e) {
+            log.error("Failed to read input image", e);
+            throw new IOException("Failed to read input image. The file might be corrupted.", e);
+        }
+
+        if (inputImage == null) {
+            log.error("Failed to read image. The image might be corrupted or in an unsupported format.");
+            throw new IOException("Failed to read image. The image might be corrupted or in an unsupported format.");
+        }
 
         // Convert the image
         BufferedImage convertedImage = new BufferedImage(
@@ -294,7 +336,26 @@ public class ImageProcessingService {
 
         // Save the converted image to a byte array
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(convertedImage, format, baos);
+        try {
+            boolean success = ImageIO.write(convertedImage, format, baos);
+            if (!success) {
+                log.error("No appropriate writer found for format: {}", format);
+                throw new IOException("Failed to write image in the specified format: " + format);
+            }
+        } catch (IOException e) {
+            log.error("Failed to write converted image", e);
+            throw new IOException("Failed to write converted image", e);
+        }
+
+        log.info("Image conversion completed successfully");
         return baos.toByteArray();
+    }
+
+    private boolean isSupportedImageFormat(String contentType) {
+        return contentType.equals("image/jpeg") ||
+               contentType.equals("image/png") ||
+               contentType.equals("image/gif") ||
+               contentType.equals("image/bmp") ||
+               contentType.equals("image/wbmp");
     }
 }
