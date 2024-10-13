@@ -312,7 +312,7 @@ public class ImageProcessingService {
         String contentType = file.getContentType();
         if (contentType == null || !isSupportedImageFormat(contentType)) {
             log.error("Unsupported image format. Content type: {}", contentType);
-            throw new IllegalArgumentException("Unsupported image format. Supported formats are JPEG, JPG, PNG, GIF, BMP, and WBMP.");
+            throw new IllegalArgumentException("Unsupported image format. Supported formats are JPEG, JPG, PNG, GIF, BMP, WBMP, and WebP.");
         }
 
         // Read the input image
@@ -357,6 +357,7 @@ public class ImageProcessingService {
                contentType.equals("image/png") ||
                contentType.equals("image/gif") ||
                contentType.equals("image/bmp") ||
-               contentType.equals("image/wbmp");
+               contentType.equals("image/wbmp") ||
+               contentType.equals("image/webp");
     }
 }
