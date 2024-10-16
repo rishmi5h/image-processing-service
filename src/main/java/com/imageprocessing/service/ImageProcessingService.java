@@ -39,6 +39,8 @@ import java.util.UUID;
 
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -269,10 +271,23 @@ public class ImageProcessingService {
 
         imagesRepository.save(transformedImage);
 
+        // Generate presigned URL
+        S3Presigner presigner = S3Presigner.create();
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(15))
+                .getObjectRequest(GetObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(transformedFileName)
+                        .build())
+                .build();
+
+        String presignedUrl = presigner.presignGetObject(presignRequest).url().toString();
+
         // Prepare the response
         Map<String, Object> response = new HashMap<>();
         response.put("id", transformedImage.getId());
         response.put("s3Url", transformedImage.getS3Url());
+        response.put("presignedUrl", presignedUrl);
         response.put("fileName", transformedImage.getFileName());
         response.put("fileType", transformedImage.getFileType());
         response.put("fileSize", transformedImage.getFileSize());
