@@ -375,4 +375,85 @@ public class ImageProcessingService {
                contentType.equals("image/wbmp") ||
                contentType.equals("image/webp");
     }
+
+    public byte[] transformImageWithoutSaving(MultipartFile file, Map<String, Object> transformations) throws IOException {
+        log.info("Starting image transformation without saving");
+        
+        // Check if the file is an image and has a supported format
+        String contentType = file.getContentType();
+        if (contentType == null || !isSupportedImageFormat(contentType)) {
+            log.error("Unsupported image format. Content type: {}", contentType);
+            throw new IllegalArgumentException("Unsupported image format. Supported formats are JPEG, JPG, PNG, GIF, BMP, WBMP, and WebP.");
+        }
+
+        // Read the input image
+        BufferedImage inputImage = ImageIO.read(file.getInputStream());
+        if (inputImage == null) {
+            log.error("Failed to read image. The image might be corrupted or in an unsupported format.");
+            throw new IOException("Failed to read image. The image might be corrupted or in an unsupported format.");
+        }
+
+        // Create an ImageProcessor from the BufferedImage
+        ImageProcessor processor = new ImagePlus("", inputImage).getProcessor();
+
+        // Apply transformations
+        applyTransformations(processor, transformations);
+
+        // Convert the processed image to bytes
+        String format = (String) transformations.get("format");
+        if (format == null) {
+            format = file.getContentType().split("/")[1];
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(processor.getBufferedImage(), format, baos);
+
+        log.info("Image transformation completed successfully");
+        return baos.toByteArray();
+    }
+
+    private void applyTransformations(ImageProcessor processor, Map<String, Object> transformations) {
+        // Apply resize
+        Map<String, Object> resize = (Map<String, Object>) transformations.get("resize");
+        if (resize != null) {
+            Integer width = (Integer) resize.get("width");
+            Integer height = (Integer) resize.get("height");
+            if (width != null && height != null) {
+                processor = processor.resize(width, height);
+            }
+        }
+
+        // Apply crop
+        Map<String, Object> crop = (Map<String, Object>) transformations.get("crop");
+        if (crop != null) {
+            Integer cropX = (Integer) crop.get("x");
+            Integer cropY = (Integer) crop.get("y");
+            Integer cropWidth = (Integer) crop.get("width");
+            Integer cropHeight = (Integer) crop.get("height");
+            if (cropX != null && cropY != null && cropWidth != null && cropHeight != null) {
+                processor.setRoi(cropX, cropY, cropWidth, cropHeight);
+                processor = processor.crop();
+            }
+        }
+
+        // Apply rotation
+        Integer rotate = (Integer) transformations.get("rotate");
+        if (rotate != null) {
+            processor.rotate(rotate);
+        }
+
+        // Apply filters
+        Map<String, Object> filters = (Map<String, Object>) transformations.get("filters");
+        if (filters != null) {
+            Boolean grayscale = (Boolean) filters.get("grayscale");
+            if (grayscale != null && grayscale) {
+                processor = processor.convertToByte(true);
+            }
+
+            Boolean sepia = (Boolean) filters.get("sepia");
+            if (sepia != null && sepia) {
+                applySepiaFilter(processor);
+            }
+        }
+    }
 }
