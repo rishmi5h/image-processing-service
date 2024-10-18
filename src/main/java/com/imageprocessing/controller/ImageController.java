@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173, https://imagery.rishmi5h.com")
@@ -127,5 +128,38 @@ public class ImageController {
         log.error("File size exceeds maximum allowed upload size", exc);
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
                 .body(Map.of("error", "File size exceeds maximum allowed upload size"));
+    }
+
+    @PostMapping("/transform")
+    public ResponseEntity<?> transformImage(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("transformations") String transformationsJson) {
+        log.info("Received image transformation request");
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> transformations = objectMapper.readValue(transformationsJson, Map.class);
+            
+            byte[] transformedImage = imageProcessingService.transformImageWithoutSaving(file, transformations);
+            
+            log.info("Successfully transformed image");
+            HttpHeaders headers = new HttpHeaders();
+            String format = (String) transformations.get("format");
+            if (format == null) {
+                format = file.getContentType().split("/")[1];
+            }
+            headers.setContentType(MediaType.parseMediaType("image/" + format));
+            headers.setContentDispositionFormData("attachment", "transformed_image." + format);
+            return new ResponseEntity<>(transformedImage, headers, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid image transformation request: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (IOException e) {
+            log.error("Failed to transform image", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during image transformation", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred during image transformation"));
+        }
     }
 }
