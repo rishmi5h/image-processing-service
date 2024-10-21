@@ -5,16 +5,12 @@ import com.imageprocessing.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.Map;
 
 @RestController
@@ -45,17 +41,25 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody AuthInfo request) {
+    public ResponseEntity<?> login(@RequestBody AuthInfo request) {
         log.info("Received login request for user: {}", request.getUsername());
-        String jwt = authService.login(request);
-        if (jwt.chars().filter(ch -> ch == '.').count() != 2) {
-            log.error("Invalid JWT token generated for user: {}", request.getUsername());
-            throw new IllegalArgumentException("Invalid JWT token");
+        try {
+            String jwt = authService.login(request);
+            if (jwt.chars().filter(ch -> ch == '.').count() != 2) {
+                log.error("Invalid JWT token generated for user: {}", request.getUsername());
+                throw new IllegalArgumentException("Invalid JWT token");
+            }
+            log.info("Successfully logged in user: {}", request.getUsername());
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "Bearer " + jwt);
+            return ResponseEntity.ok().headers(headers).body(jwt);
+        } catch (IllegalArgumentException e) {
+            log.error("Login failed for user: {}", request.getUsername(), e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+        } catch (Exception e) {
+            log.error("Unexpected error during login for user: {}", request.getUsername(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
         }
-        log.info("Successfully logged in user: {}", request.getUsername());
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + jwt);
-        return ResponseEntity.ok().headers(headers).body(jwt);
     }
 
     @PostMapping("/validate-token")
