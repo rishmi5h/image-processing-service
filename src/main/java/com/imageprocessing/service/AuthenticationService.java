@@ -52,4 +52,11 @@ public class AuthenticationService {
         }
         return false;
     }
+
+    public void updatePassword(String username, String newPassword) {
+        User user = repository.findByUsername(username)
+            .orElse(() -> new UsernameNotFoundException("User not found"));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        repository.save(user);
+    }
 }
