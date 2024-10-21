@@ -4,13 +4,16 @@ import com.imageprocessing.entities.User;
 import com.imageprocessing.model.AuthInfo;
 import com.imageprocessing.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
@@ -55,8 +58,14 @@ public class AuthenticationService {
 
     public void updatePassword(String username, String newPassword) {
         User user = repository.findByUsername(username)
-            .orElse(() -> new UsernameNotFoundException("User not found"));
+            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("New password cannot be null or empty");
+        }
+
         user.setPassword(passwordEncoder.encode(newPassword));
         repository.save(user);
+        log.info("Password updated successfully for user: {}", username);
     }
 }
