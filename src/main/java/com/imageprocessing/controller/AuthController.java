@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.HttpStatus;
 import java.util.Map;
 
@@ -73,6 +76,27 @@ public class AuthController {
         } catch (Exception e) {
             log.error("Error validating token", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("valid", false, "error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/update-password")
+    public ResponseEntity<?> updatePassword(@RequestBody Map<String, String> passwordUpdate) {
+        log.info("Received password update request");
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+            String newPassword = passwordUpdate.get("newPassword");
+            if (newPassword == null || newPassword.isEmpty()) {
+                return ResponseEntity.badRequest().body("New password is required");
+            }
+
+            authService.updatePassword(username, newPassword);
+            log.info("Password updated successfully for user: {}", username);
+            return ResponseEntity.ok().body("Password updated successfully");
+        } catch (Exception e) {
+            log.error("Error updating password", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating password: " + e.getMessage());
         }
     }
 }
