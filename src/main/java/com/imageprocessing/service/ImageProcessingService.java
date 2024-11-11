@@ -212,18 +212,6 @@ public class ImageProcessingService {
             }
         }
 
-        Map<String, Object> crop = (Map<String, Object>) transformations.get("crop");
-        if (crop != null) {
-            Integer cropX = (Integer) crop.get("x");
-            Integer cropY = (Integer) crop.get("y");
-            Integer cropWidth = (Integer) crop.get("width");
-            Integer cropHeight = (Integer) crop.get("height");
-            if (cropX != null && cropY != null && cropWidth != null && cropHeight != null) {
-                processor.setRoi(cropX, cropY, cropWidth, cropHeight);
-                processor = processor.crop();
-            }
-        }
-
         Integer rotate = (Integer) transformations.get("rotate");
         if (rotate != null) {
             processor.rotate(rotate);
@@ -416,29 +404,17 @@ public class ImageProcessingService {
         // Apply resize
         Map<String, Object> resize = (Map<String, Object>) transformations.get("resize");
         if (resize != null) {
-            Integer width = (Integer) resize.get("width");
-            Integer height = (Integer) resize.get("height");
+            Integer width = resize.get("width") != null ? ((Number) resize.get("width")).intValue() : null;
+            Integer height = resize.get("height") != null ? ((Number) resize.get("height")).intValue() : null;
             if (width != null && height != null) {
                 processor = processor.resize(width, height);
             }
         }
 
-        // Apply crop
-        Map<String, Object> crop = (Map<String, Object>) transformations.get("crop");
-        if (crop != null) {
-            Integer cropX = (Integer) crop.get("x");
-            Integer cropY = (Integer) crop.get("y");
-            Integer cropWidth = (Integer) crop.get("width");
-            Integer cropHeight = (Integer) crop.get("height");
-            if (cropX != null && cropY != null && cropWidth != null && cropHeight != null) {
-                processor.setRoi(cropX, cropY, cropWidth, cropHeight);
-                processor = processor.crop();
-            }
-        }
-
         // Apply rotation
-        Integer rotate = (Integer) transformations.get("rotate");
-        if (rotate != null) {
+        Object rotateObj = transformations.get("rotate");
+        if (rotateObj != null) {
+            Integer rotate = ((Number) rotateObj).intValue();
             processor.rotate(rotate);
         }
 
